@@ -163,7 +163,7 @@ public class FeedbackController implements SceneAware {
 
     private void handleEvaluationError(Throwable ex) {
         AppErrorHandler.report(ex, "Evaluating interview answer",
-                message -> showFeedback("Evaluation failed: " + message));
+                message -> displayTextAreaError("Evaluation failed: " + message));
         setEvaluationInProgress(false);
     }
 
