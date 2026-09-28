@@ -3,6 +3,7 @@ package com.aicodinginterviewprep.controllers;
 import com.aicodinginterviewprep.EvaluatorService;
 import com.aicodinginterviewprep.SceneAware;
 import com.aicodinginterviewprep.SceneManager;
+import com.aicodinginterviewprep.errors.AppErrorHandler;
 import com.aicodinginterviewprep.openai.EvaluationResult;
 import javafx.application.Platform;
 import javafx.scene.control.Button;
@@ -63,11 +64,11 @@ public class FeedbackController implements SceneAware {
         showFeedback("Evaluating your response with AI, please wait...");
 
         evaluatorService.evaluateAnswerAsync(validQuestion, userAnswer)
-            .thenAccept(result -> Platform.runLater(() -> handleEvaluationSuccess(result)))
-            .exceptionally(ex -> {
-                Platform.runLater(() -> handleEvaluationError(ex));
-                return null;
-            });
+                .thenAccept(result -> Platform.runLater(() -> handleEvaluationSuccess(result)))
+                .exceptionally(ex -> {
+                    Platform.runLater(() -> handleEvaluationError(ex));
+                    return null;
+                });
     }
 
     private String extractValidQuestion() {
@@ -117,9 +118,8 @@ public class FeedbackController implements SceneAware {
     }
 
     private void handleEvaluationError(Throwable ex) {
-        Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
-        String errorMessage = cause.getMessage() != null ? cause.getMessage() : "Unknown error.";
-        showFeedback("Evaluation failed: " + errorMessage);
+        AppErrorHandler.report(ex, "Evaluating interview answer",
+                message -> showFeedback("Evaluation failed: " + message));
         setEvaluationInProgress(false);
     }
 }

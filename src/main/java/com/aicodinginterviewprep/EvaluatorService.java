@@ -22,8 +22,8 @@ public class EvaluatorService {
     }
 
     public EvaluatorService(OpenAiApiClient apiClient, ObjectMapper objectMapper) {
-      this.apiClient = apiClient;
-      this.objectMapper = objectMapper;
+        this.apiClient = apiClient;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -35,7 +35,10 @@ public class EvaluatorService {
 
             return apiClient.postChatCompletionAsync(jsonRequestBody)
                     .thenApply(this::parseResponseContent);
-        } catch (Exception e) {
+        } catch (JsonProcessingException e) {
+            return CompletableFuture.failedFuture(
+                    new OpenAiApiException("Failed to prepare OpenAI evaluation request", e));
+        } catch (RuntimeException e) {
             return CompletableFuture.failedFuture(e);
         }
     }
@@ -91,13 +94,13 @@ public class EvaluatorService {
                     .path("message")
                     .path("content")
                     .asText();
-            
+
             JsonNode evalJson = objectMapper.readTree(content);
             int rating = evalJson.path("rating").asInt();
             String evaluation = evalJson.path("evaluation").asText();
 
             return new EvaluationResult(evaluation, rating);
-        } catch (Exception e) {
+        } catch (JsonProcessingException | IndexOutOfBoundsException | NullPointerException e) {
             throw new OpenAiApiException("Failed to parse OpenAI JSON response", e);
         }
     }
